@@ -1,4 +1,4 @@
-import '@/styles/globals.css'
+import '../../../styles/globals.css'
 import { MainDashboardNav } from '@/components/component/dashboard/dashboard-nav'
 import { MobileNav } from '@/components/component/dashboard/dashboard-nav-mobile'
 import { AuthHeader } from '@/components/component/login/header'
@@ -12,13 +12,14 @@ import { ProfileNav } from '@/components/component/profile/profile-nav'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={` ${inter.className}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
+          storageKey="cargo-theme"
         >
           <ProfileNav>{children}</ProfileNav>
           <Toaster />

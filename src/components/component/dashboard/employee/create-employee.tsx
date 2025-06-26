@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 
 import {
@@ -45,16 +46,6 @@ const formSchema = z.object({
   positionId: z.string(),
 })
 
-async function handleSubmit(data: z.infer<typeof formSchema>) {
-  console.log('We in handleSubmit')
-  let formData = new FormData()
-  formData.append('positionId', data.positionId)
-  formData.append('officeId', data.officeId)
-  formData.append('salary', data.salary)
-  formData.append('id', data.id)
-  await AddEmployeePartial(formData)
-}
-
 export function CreateEmployee({
   users,
   offices,
@@ -64,6 +55,34 @@ export function CreateEmployee({
   offices: Offices
   position: Positions
 }) {
+  const router = useRouter()
+
+  async function handleSubmit(data: z.infer<typeof formSchema>) {
+    console.log('We in handleSubmit')
+    let formData = new FormData()
+    formData.append('positionId', data.positionId)
+    formData.append('officeId', data.officeId)
+    formData.append('salary', data.salary)
+    formData.append('id', data.id)
+
+    const result = await AddEmployeePartial(formData)
+
+    if (result?.success) {
+      toast({
+        title: 'Success',
+        description: 'Employee has been created successfully.',
+      })
+      // Navigate back to employees page
+      router.push('/dashboard/employees')
+      router.refresh() // Refresh the page to show updated data
+    } else {
+      toast({
+        title: 'Error',
+        description: result?.error || 'Failed to create employee',
+        variant: 'destructive',
+      })
+    }
+  }
   const [showEditDialog, setEditDialog] = React.useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -125,7 +144,7 @@ export function CreateEmployee({
                         <SelectContent>
                           {position?.map(position => (
                             <SelectItem key={position.id} value={position.id!.toString()}>
-                              {position.positionType!}
+                              {position.type!}
                             </SelectItem>
                           ))}
                         </SelectContent>

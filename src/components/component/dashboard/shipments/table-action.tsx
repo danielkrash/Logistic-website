@@ -43,7 +43,9 @@ import {
   changePackageDataById,
   DeletePackageById,
   package_status_fetcher,
+  RegisterPackageById,
 } from '@/lib/package_actions'
+import { GetCurrentEmployee } from '@/lib/employee_actions'
 import useSWR from 'swr'
 import {
   Select,
@@ -56,7 +58,7 @@ import {
 const formSchema = z.object({
   status: z.string(),
   address: z.string(),
-  toAdress: z.boolean().default(false),
+  toAdress: z.boolean(),
 })
 
 function usePackageStatus() {
@@ -79,9 +81,74 @@ export function ShipmentTableActions({ package_ }: { package_: Package }) {
   async function onSubmit(data: z.infer<typeof formSchema>) {
     await handleSubmit(data, package_.id!)
   }
+
+  async function handleRegister() {
+    const result = await RegisterPackageById(package_.id!)
+    if (result?.success) {
+      toast({
+        description: 'Package registered successfully.',
+      })
+    } else {
+      toast({
+        description: result?.error || 'Failed to register package.',
+        variant: 'destructive',
+      })
+    }
+    setShowRegisterDialog(false)
+  }
+
   const { statuses } = usePackageStatus()
   const [showEditDialog, setEditDialog] = React.useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false)
+  const [showRegisterDialog, setShowRegisterDialog] = React.useState(false)
+  const [currentEmployee, setCurrentEmployee] = React.useState<any>(null)
+  const [loading, setLoading] = React.useState(true)
+
+  // Check if user can register packages (ParcelManager position or admin/manager roles)
+  const canRegister = React.useMemo(() => {
+    console.log('Checking if user can register packages...')
+    if (!currentEmployee) return false
+
+    // Check if user has admin or manager roles
+    const userRoles = currentEmployee.roles || []
+    console.log('Current employee roles:', userRoles)
+    if (userRoles.includes('admin') || userRoles.includes('manager')) {
+      return true
+    }
+
+    // Check if user has ParcelManager position
+    const positionType = currentEmployee.position?.toLowerCase()
+    console.log('Current employee position type:', positionType)
+    return positionType === 'parcelmanager'
+  }, [currentEmployee])
+
+  // Check if package can be registered (status is "on hold")
+  const packageCanBeRegistered = React.useMemo(() => {
+    return package_.status?.toLowerCase() === 'on hold'
+  }, [package_.status])
+
+  // Fetch current employee info on component mount
+  React.useEffect(() => {
+    console.log('Fetching current employee...')
+    async function fetchCurrentEmployee() {
+      try {
+        setLoading(true)
+        const employee = await GetCurrentEmployee()
+        console.log('Current employee fetched:', employee)
+        setCurrentEmployee(employee)
+      } catch (error) {
+        console.error('Failed to fetch current employee:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCurrentEmployee()
+  }, [])
+
+  console.log('canRegister:', canRegister)
+  console.log('packageCanBeRegistered:', packageCanBeRegistered)
+  console.log('Current employee:', currentEmployee)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -112,6 +179,14 @@ export function ShipmentTableActions({ package_ }: { package_: Package }) {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setEditDialog(true)}>Edit</DropdownMenuItem>
+          {canRegister && packageCanBeRegistered && (
+            <DropdownMenuItem
+              onSelect={() => setShowRegisterDialog(true)}
+              className="text-green-600"
+            >
+              Register Package
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={() => setShowDeleteDialog(true)} className="text-red-600">
             Delete
           </DropdownMenuItem>
@@ -120,7 +195,7 @@ export function ShipmentTableActions({ package_ }: { package_: Package }) {
       <AlertDialog open={showEditDialog} onOpenChange={setEditDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Edit Package</AlertDialogTitle>
           </AlertDialogHeader>
           <>
             <Form {...form}>
@@ -227,6 +302,23 @@ export function ShipmentTableActions({ package_ }: { package_: Package }) {
               }}
             >
               Delete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={showRegisterDialog} onOpenChange={setShowRegisterDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Register Package</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to register this package? This will make it available for
+              courier assignment and delivery.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button variant="default" onClick={handleRegister}>
+              Register Package
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

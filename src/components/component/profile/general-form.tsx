@@ -20,7 +20,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { toast } from 'sonner'
-import type { components } from '@/types/schemav2'
+import type { components } from '@/types/schemav3'
 import { format } from 'date-fns'
 import { changeData } from '@/lib/user_actions'
 

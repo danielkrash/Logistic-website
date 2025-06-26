@@ -1,14 +1,14 @@
 'use server'
 import 'server-only'
-import { cookies } from 'next/headers'
 import { permanentRedirect, redirect } from 'next/navigation'
-import type { paths, components } from '@/types/schemav2'
+import type { paths, components } from '@/types/schemav3'
 import type { Companies, CompanyRevenue, Roles } from '@/types/dashboard'
 import { format } from 'date-fns'
 import { revalidateTag } from 'next/cache'
+import { getAuthCookie } from './cookie-utils'
 
 export async function getRoles() {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   try {
     const response = await fetch('http://localhost:7028/role', {
       next: { revalidate: 3600 },
@@ -26,7 +26,7 @@ export async function getRoles() {
   }
 }
 export async function getCompanyRevenue(id: number) {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   try {
     const response = await fetch(`http://localhost:7028/company/${id}/revenue`, {
       method: 'GET',
@@ -43,7 +43,7 @@ export async function getCompanyRevenue(id: number) {
   }
 }
 export async function createCompanyPartial(data: FormData) {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   let add_data = JSON.stringify({
     name: data.get('name'),
     address: data.get('address'),
@@ -68,7 +68,7 @@ export async function createCompanyPartial(data: FormData) {
 }
 
 export async function GetCompanies() {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   try {
     const response = await fetch('http://localhost:7028/company', {
       next: { tags: ['company'] },
@@ -87,7 +87,7 @@ export async function GetCompanies() {
 }
 
 export async function changeCompanyDataById(data: FormData) {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   let date = format(new Date(), 'yyyy-MM-dd')
   let change_data = JSON.stringify({
     name: data.get('name'),
@@ -119,7 +119,7 @@ export async function changeCompanyDataById(data: FormData) {
 }
 
 export const company_fetcher = async (url: string) => {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   const response = await fetch(url, {
     method: 'GET',
     credentials: 'include',

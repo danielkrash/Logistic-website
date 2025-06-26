@@ -1,14 +1,14 @@
 'use server'
 import 'server-only'
-import { cookies } from 'next/headers'
 import { permanentRedirect, redirect } from 'next/navigation'
-import type { paths, components } from '@/types/schemav2'
+import type { paths, components } from '@/types/schemav3'
 import type { Companies, Offices, Roles } from '@/types/dashboard'
 import { format } from 'date-fns'
 import { revalidateTag } from 'next/cache'
+import { getAuthCookie } from './cookie-utils'
 
 export async function createOfficePartial(data: FormData) {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   let add_data = JSON.stringify({
     address: data.get('address'),
     phoneNumber: data.get('phoneNumber'),
@@ -35,7 +35,7 @@ export async function createOfficePartial(data: FormData) {
 }
 
 export async function GetOffices() {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   try {
     const response = await fetch('http://localhost:7028/office', {
       method: 'GET',
@@ -54,7 +54,7 @@ export async function GetOffices() {
 }
 
 export async function changeOfficeDataById(data: FormData) {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   let change_data = JSON.stringify({
     phoneNumber: data.get('phoneNumber'),
     id: data.get('id'),

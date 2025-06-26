@@ -75,13 +75,31 @@ const formSchemaDelete = z.object({
 type UserFormValues = z.infer<typeof formSchema>
 
 async function handleSubmit(data: UserFormValues) {
+  console.log('Form data being submitted:', data)
   let formData = new FormData()
   if (data.officeId) formData.append('officeId', data.officeId.toString())
   if (data.positionId) formData.append('positionId', data.positionId.toString())
   formData.append('salary', data.salary.toString())
   formData.append('id', data.id)
-  console.log('We are here')
-  await changeEmployeeDataById(formData)
+  console.log('FormData contents:')
+  for (let [key, value] of formData.entries()) {
+    console.log(key, value)
+  }
+
+  const result = await changeEmployeeDataById(formData)
+
+  if (result?.success) {
+    toast({
+      title: 'Success',
+      description: 'Employee has been updated successfully.',
+    })
+  } else {
+    toast({
+      title: 'Error',
+      description: result?.error || 'Failed to update employee',
+      variant: 'destructive',
+    })
+  }
 }
 
 function usePositions() {
@@ -95,6 +113,7 @@ function usePositions() {
 
 export function EmployeeTableActions({ data: employee }: { data: Employee }) {
   const { positions } = usePositions()
+
   const defaultValues: Partial<UserFormValues> = {
     officeId: employee?.officeId?.toString() ?? '',
     salary: employee?.salary?.toString() ?? '',
@@ -107,6 +126,18 @@ export function EmployeeTableActions({ data: employee }: { data: Employee }) {
     resolver: zodResolver(formSchema),
     defaultValues,
   })
+
+  // Update form values when positions data loads
+  React.useEffect(() => {
+    console.log('Positions loaded:', positions)
+    console.log('Employee position:', employee?.position)
+    if (positions && employee?.position) {
+      const currentPositionId =
+        positions.find(pos => pos.type === employee.position)?.id?.toString() ?? ''
+      console.log('Found position ID:', currentPositionId)
+      form.setValue('positionId', currentPositionId)
+    }
+  }, [positions, employee?.position, form])
   const formButtonRef = React.useRef<HTMLButtonElement>(null)
   const fromRef = useRef<HTMLFormElement>(null)
   return (
@@ -161,7 +192,7 @@ export function EmployeeTableActions({ data: employee }: { data: Employee }) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Position</FormLabel>
-                      <Select onValueChange={field.onChange}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a valid position to add" />
@@ -170,7 +201,7 @@ export function EmployeeTableActions({ data: employee }: { data: Employee }) {
                         <SelectContent>
                           {positions?.map(position => (
                             <SelectItem key={position.id} value={position.id?.toString()!}>
-                              {position.positionType!}
+                              {position.type!}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -229,11 +260,21 @@ export function EmployeeTableActions({ data: employee }: { data: Employee }) {
             <Button
               variant="destructive"
               onClick={async () => {
-                await DeleteEmployeeById(employee?.id!)
-                toast({
-                  description: 'This preset has been deleted.',
-                })
-                setShowDeleteDialog(false)
+                const result = await DeleteEmployeeById(employee?.id!)
+
+                if (result?.success) {
+                  toast({
+                    title: 'Success',
+                    description: 'Employee has been deleted successfully.',
+                  })
+                  setShowDeleteDialog(false)
+                } else {
+                  toast({
+                    title: 'Error',
+                    description: result?.error || 'Failed to delete employee',
+                    variant: 'destructive',
+                  })
+                }
               }}
             >
               Delete

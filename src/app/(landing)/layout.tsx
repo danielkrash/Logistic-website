@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import '@/styles/globals.css'
+import '../../styles/globals.css'
 import { Footer } from '@/components/component/footer'
 import { Header } from '@/components/component/header'
 import { ThemeProvider } from '@/components/component/theme-provider'
@@ -15,13 +15,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={` ${inter.className}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
+          storageKey="cargo-theme"
         >
           <Header />
           <main className="flex-1 bg-background text-foreground">{children}</main>

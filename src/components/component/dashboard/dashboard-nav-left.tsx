@@ -7,10 +7,11 @@ import {
   NewspaperIcon,
   type LucideIcon,
   Building2Icon,
+  BriefcaseIcon,
 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import type { Route } from 'next'
-import type { components } from '@/types/schemav2'
+import type { components } from '@/types/schemav3'
 
 type LinkGroup = LinkProps<Route> & {
   name: string
@@ -59,6 +60,7 @@ export function LeftNav({ user }: { user: User }) {
         icon: UsersIcon,
       },
       { name: 'Users', href: '/dashboard/users', icon: UsersIcon },
+      { name: 'Positions', href: '/dashboard/positions' as any, icon: BriefcaseIcon },
       { name: 'Offices', href: '/dashboard/offices', icon: HomeIcon },
       { name: 'Shipments', href: '/dashboard/shipments', icon: PackageIcon },
       { name: 'PendingShipments', href: '/dashboard/pending-shipments', icon: PackageIcon },
@@ -102,6 +104,7 @@ export function LeftNav({ user }: { user: User }) {
       },
       // { name: 'Customers', href: '/dashboard/customers', icon: UsersIcon },
       { name: 'Users', href: '/dashboard/users', icon: UsersIcon },
+      { name: 'Positions', href: '/dashboard/positions' as any, icon: BriefcaseIcon },
       { name: 'Offices', href: '/dashboard/offices', icon: HomeIcon },
       { name: 'Shipments', href: '/dashboard/shipments', icon: PackageIcon },
       // { name: 'Inquiries', href: '/dashboard/inquiries', icon: NewspaperIcon },

@@ -57,7 +57,7 @@ import {
 const formSchema = z.object({
   status: z.string(),
   address: z.string(),
-  toAdress: z.boolean().default(false),
+  toAdress: z.boolean(),
 })
 
 function usePackageStatus() {

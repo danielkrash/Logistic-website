@@ -13,10 +13,11 @@ import {
   NewspaperIcon,
   ArrowUpRightSquareIcon,
   Building2Icon,
+  BriefcaseIcon,
 } from 'lucide-react'
 import type { Route } from 'next'
 import { usePathname } from 'next/navigation'
-import type { components } from '@/types/schemav2'
+import type { components } from '@/types/schemav3'
 
 type LinkGroup = LinkProps<Route> & {
   name: string
@@ -99,6 +100,7 @@ export function MobileNav({ user }: { user: User }) {
       },
       // { name: 'Customers', href: '/dashboard/customers', icon: UsersIcon },
       { name: 'Users', href: '/dashboard/users', icon: UsersIcon },
+      { name: 'Positions', href: '/dashboard/positions' as any, icon: BriefcaseIcon },
       { name: 'Offices', href: '/dashboard/offices', icon: HomeIcon },
       { name: 'Shipments', href: '/dashboard/shipments', icon: PackageIcon },
       // { name: 'Inquiries', href: '/dashboard/inquiries', icon: NewspaperIcon },

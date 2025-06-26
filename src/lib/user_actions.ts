@@ -1,14 +1,14 @@
 'use server'
 import 'server-only'
-import { cookies } from 'next/headers'
+import { getAuthCookie } from './cookie-utils'
 import { permanentRedirect, redirect } from 'next/navigation'
-import type { paths, components } from '@/types/schemav2'
+import type { paths, components } from '@/types/schemav3'
 import type { CreatedUser, Roles, Users } from '@/types/dashboard'
 
 type User = components['schemas']['UserDto']
 type changeUserPassword = paths['/users/current/password']['put']['responses']
 export async function changeData(data: FormData) {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   let change_data = JSON.stringify({
     firstName: data.get('firstName'),
     lastName: data.get('lastName'),
@@ -40,7 +40,7 @@ export async function changeData(data: FormData) {
 }
 
 export async function changePassword(data: FormData) {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   let change_data = JSON.stringify({
     currentPassword: data.get('currentPassword'),
     newPassword: data.get('newPassword'),
@@ -68,7 +68,7 @@ export async function changePassword(data: FormData) {
   redirect('http://localhost:3000/profile/password')
 }
 export async function GetUserSecrets() {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   try {
     const response = await fetch('http://localhost:7028/users/current/secrets', {
       next: { revalidate: 30 },
@@ -87,7 +87,7 @@ export async function GetUserSecrets() {
   redirect('http://localhost:3000/profile/personal-data')
 }
 export async function GetUsers() {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   try {
     const response = await fetch('http://localhost:7028/users', {
       cache: 'no-store',
@@ -106,7 +106,7 @@ export async function GetUsers() {
 }
 
 export async function GetUserCompany() {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   try {
     const response = await fetch('http://localhost:7028/users/current/Company', {
       cache: 'no-store',
@@ -124,7 +124,7 @@ export async function GetUserCompany() {
   }
 }
 export async function AddUserPartial(data: FormData) {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   let add_data = JSON.stringify({
     Email: data.get('Email'),
     password: data.get('password'),
@@ -150,7 +150,7 @@ export async function AddUserPartial(data: FormData) {
 }
 
 export async function changeUserDataById(data: FormData) {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   let change_data = JSON.stringify({
     firstName: data.get('firstName'),
     lastName: data.get('lastName'),
@@ -185,7 +185,7 @@ export async function changeUserDataById(data: FormData) {
   redirect('http://localhost:3000/dashboard/users')
 }
 export async function DeleteUserById(id: string) {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   let url = `http://localhost:7028/users/${id}`
   try {
     const response = await fetch(url, {
@@ -209,7 +209,7 @@ export async function DeleteUserById(id: string) {
   redirect('http://localhost:3000/dashboard/users')
 }
 export async function DeleteUserRoleById(data: FormData) {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   let delete_data = JSON.stringify({
     id: data.get('id'),
     role: data.get('role'),
@@ -239,7 +239,7 @@ export async function DeleteUserRoleById(data: FormData) {
 }
 
 export const role_fetcher = async (url: string) => {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   const response = await fetch(url, {
     method: 'GET',
     credentials: 'include',
@@ -255,7 +255,7 @@ export const role_fetcher = async (url: string) => {
   return result
 }
 export const user_fetcher = async (url: string) => {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  var cookie = await getAuthCookie()
   const response = await fetch(url, {
     method: 'GET',
     credentials: 'include',

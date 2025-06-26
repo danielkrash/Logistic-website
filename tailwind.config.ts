@@ -1,8 +1,8 @@
 import type { Config } from 'tailwindcss'
-import colors from 'tailwindcss/colors';
+const colors = require('tailwindcss/colors')
 
 const config: Config = {
-  darkMode: ['class'],
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -10,8 +10,6 @@ const config: Config = {
     './node_modules/@tremor/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
-    transparent: "transparent",
-    current: "currentColor",
     container: {
       center: true,
       padding: '2rem',
@@ -21,6 +19,8 @@ const config: Config = {
     },
     extend: {
       colors: {
+        transparent: "transparent",
+        current: "currentColor",
         tremor: {
           brand: {
             faint: colors.blue[50],
