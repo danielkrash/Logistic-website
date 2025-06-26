@@ -36,7 +36,8 @@ import { Input } from '@/components/ui/input'
 import { toast } from '@/components/ui/use-toast'
 import type { Company } from '@/types/dashboard'
 import { changeCustomerData } from '@/lib/form_action'
-import { changeCompanyDataById } from '@/lib/company_actions'
+import { changeCompanyDataById, getCompanyRevenue } from '@/lib/company_actions'
+import { GetCurrentEmployee } from '@/lib/employee_actions'
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -60,6 +61,52 @@ export function CompanyTableActions({ data }: { data: Company }) {
   const [showEditDialog, setEditDialog] = React.useState(false)
   const [showValidForm, setValidForm] = React.useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false)
+  const [currentEmployee, setCurrentEmployee] = React.useState<any>(null)
+  const [loading, setLoading] = React.useState(true)
+  const [isGeneratingRevenue, setIsGeneratingRevenue] = React.useState(false)
+
+  // Check if user is admin or manager
+  const canGenerateRevenue = React.useMemo(() => {
+    if (!currentEmployee) return false
+    const userRoles = currentEmployee.roles || []
+    return userRoles.includes('admin') || userRoles.includes('manager')
+  }, [currentEmployee])
+
+  // Fetch current employee info on component mount
+  React.useEffect(() => {
+    async function fetchCurrentEmployee() {
+      try {
+        setLoading(true)
+        const employee = await GetCurrentEmployee()
+        setCurrentEmployee(employee)
+      } catch (error) {
+        console.error('Failed to fetch current employee:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCurrentEmployee()
+  }, [])
+
+  async function handleGenerateRevenue() {
+    setIsGeneratingRevenue(true)
+    try {
+      await getCompanyRevenue(Number(data.id))
+      toast({
+        title: 'Success',
+        description: 'Revenue data generated successfully.',
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to generate revenue data.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsGeneratingRevenue(false)
+    }
+  }
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -91,6 +138,15 @@ export function CompanyTableActions({ data }: { data: Company }) {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setEditDialog(true)}>Edit</DropdownMenuItem>
+          {canGenerateRevenue && (
+            <DropdownMenuItem
+              onSelect={() => handleGenerateRevenue()}
+              className="text-blue-600"
+              disabled={isGeneratingRevenue}
+            >
+              {isGeneratingRevenue ? 'Generating...' : 'Generate Revenue Data'}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={() => setShowDeleteDialog(true)} className="text-red-600">
             Delete
           </DropdownMenuItem>

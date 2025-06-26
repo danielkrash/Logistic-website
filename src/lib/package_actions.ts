@@ -218,3 +218,166 @@ export const package_status_fetcher = async (url: string) => {
   var result: PackageStatuses = await response.json()
   return result
 }
+
+export async function GetPendingPackagesForCourier() {
+  var cookie = await getAuthCookie()
+  try {
+    // Try different status parameter formats
+    const statusParam = 'waiting courier'
+    const encodedStatus = encodeURIComponent(statusParam)
+    const url = `http://localhost:7028/package?status=${encodedStatus}`
+
+    console.log('Fetching packages with URL:', url)
+
+    const response = await fetch(url, {
+      next: { tags: ['package'] },
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: `.AspNetCore.Identity.Application=${cookie?.value}`,
+      },
+    })
+
+    if (!response.ok) {
+      console.error('Failed to fetch pending packages. Response status:', response.status)
+      const errorText = await response.text()
+      console.error('Error response:', errorText)
+      throw new Error('Failed to fetch pending packages')
+    }
+
+    let result: Packages = await response.json()
+
+    // Debug logging to see what statuses are returned
+    console.log('Total packages returned:', result.length)
+    const statuses = result.map(pkg => pkg.status)
+    console.log('Package statuses:', [...new Set(statuses)])
+    console.log(
+      'Packages with waiting courier status:',
+      result.filter(pkg => pkg.status?.toLowerCase().includes('wait')).length,
+    )
+
+    return result
+  } catch (error) {
+    console.error('There was a problem with the fetch operation:', error)
+    return []
+  }
+}
+
+export async function AssignCourierToPackage(packageId: string, deliveryDate: string) {
+  var cookie = await getAuthCookie()
+
+  // Get current user's employee ID
+  const { GetCurrentUserEmployee } = await import('./employee_actions')
+  const currentEmployee = await GetCurrentUserEmployee()
+
+  if (!currentEmployee?.id) {
+    return {
+      success: false,
+      error: 'Unable to get current user employee information',
+    }
+  }
+
+  const assignData = JSON.stringify({
+    courierId: currentEmployee.id,
+    deliveryDate: deliveryDate,
+  })
+
+  console.log('Assigning package with courier ID:', currentEmployee.id)
+  console.log('Delivery date (UTC):', deliveryDate)
+  console.log('Parsed UTC date:', new Date(deliveryDate).toISOString())
+
+  try {
+    const response = await fetch(`http://localhost:7028/package/${packageId}/assign-courier`, {
+      method: 'PUT',
+      credentials: 'include',
+      body: assignData,
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: `.AspNetCore.Identity.Application=${cookie?.value}`,
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Failed to assign courier:', errorText)
+      return {
+        success: false,
+        error: 'Failed to assign courier to package',
+      }
+    }
+
+    revalidateTag('package')
+    return {
+      success: true,
+    }
+  } catch (error) {
+    console.error('There was a problem with the assign courier operation:', error)
+    return {
+      success: false,
+      error: 'Network error occurred while assigning courier',
+    }
+  }
+}
+
+export async function MarkPackageAsDelivered(packageId: string) {
+  var cookie = await getAuthCookie()
+
+  // Get current user's employee info to verify courier status
+  const { GetCurrentUserEmployee } = await import('./employee_actions')
+  const currentEmployee = await GetCurrentUserEmployee()
+
+  if (!currentEmployee?.id) {
+    return {
+      success: false,
+      error: 'Unable to get current user employee information',
+    }
+  }
+
+  // Check if user is a courier
+  const isCourier = currentEmployee.position?.toLowerCase() === 'courier'
+  if (!isCourier) {
+    return {
+      success: false,
+      error: 'Only couriers can mark packages as delivered',
+    }
+  }
+
+  const deliveryData = JSON.stringify({
+    status: 'delivered',
+  })
+
+  console.log('Marking package as delivered by courier:', currentEmployee.id)
+
+  try {
+    const response = await fetch(`http://localhost:7028/package/${packageId}`, {
+      method: 'PUT',
+      credentials: 'include',
+      body: deliveryData,
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: `.AspNetCore.Identity.Application=${cookie?.value}`,
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Failed to mark package as delivered:', errorText)
+      return {
+        success: false,
+        error: 'Failed to mark package as delivered',
+      }
+    }
+
+    revalidateTag('package')
+    return {
+      success: true,
+    }
+  } catch (error) {
+    console.error('There was a problem with the mark as delivered operation:', error)
+    return {
+      success: false,
+      error: 'Network error occurred while marking package as delivered',
+    }
+  }
+}

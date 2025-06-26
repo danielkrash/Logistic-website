@@ -44,6 +44,7 @@ import {
   DeletePackageById,
   package_status_fetcher,
   RegisterPackageById,
+  MarkPackageAsDelivered,
 } from '@/lib/package_actions'
 import { GetCurrentEmployee } from '@/lib/employee_actions'
 import useSWR from 'swr'
@@ -71,6 +72,27 @@ function usePackageStatus() {
 }
 
 export function ShipmentTableActions({ package_ }: { package_: Package }) {
+  const { statuses } = usePackageStatus()
+  const [showEditDialog, setEditDialog] = React.useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false)
+  const [showRegisterDialog, setShowRegisterDialog] = React.useState(false)
+  const [showDeliveredDialog, setShowDeliveredDialog] = React.useState(false)
+  const [isMarkingDelivered, setIsMarkingDelivered] = React.useState(false)
+  const [currentEmployee, setCurrentEmployee] = React.useState<any>(null)
+  const [loading, setLoading] = React.useState(true)
+
+  // Move useForm to the top - hooks must be called in the same order every render
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      status: package_.status ?? '',
+      toAdress: package_.toAdress ?? false,
+      address: package_.deliveryAddress ?? '',
+    },
+  })
+  const formButtonRef = React.useRef<HTMLButtonElement>(null)
+  const formRef = React.useRef<HTMLFormElement>(null)
+
   async function handleSubmit(data: z.infer<typeof formSchema>, id: string) {
     let formData = new FormData()
     formData.append('status', data.status)
@@ -97,12 +119,71 @@ export function ShipmentTableActions({ package_ }: { package_: Package }) {
     setShowRegisterDialog(false)
   }
 
-  const { statuses } = usePackageStatus()
-  const [showEditDialog, setEditDialog] = React.useState(false)
-  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false)
-  const [showRegisterDialog, setShowRegisterDialog] = React.useState(false)
-  const [currentEmployee, setCurrentEmployee] = React.useState<any>(null)
-  const [loading, setLoading] = React.useState(true)
+  async function handleMarkAsDelivered() {
+    setIsMarkingDelivered(true)
+    try {
+      const result = await MarkPackageAsDelivered(package_.id!)
+      if (result?.success) {
+        toast({
+          title: 'Success',
+          description: 'Package marked as delivered successfully.',
+        })
+        // Refresh the page to show updated package list
+        window.location.reload()
+      } else {
+        toast({
+          title: 'Error',
+          description: result?.error || 'Failed to mark package as delivered.',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsMarkingDelivered(false)
+      setShowDeliveredDialog(false)
+    }
+  }
+
+  // Check if user can edit/delete packages (admin or "on hold" status)
+  const canEditOrDelete = React.useMemo(() => {
+    console.log('=== CHECKING EDIT/DELETE PERMISSIONS ===')
+    console.log('Current employee:', currentEmployee)
+    console.log('Loading state:', loading)
+
+    if (loading) {
+      console.log('Still loading employee data...')
+      return false
+    }
+
+    if (!currentEmployee) {
+      console.log('No current employee/user found')
+      return false
+    }
+
+    // Check if user has admin or manager roles (they can always edit/delete)
+    const userRoles = currentEmployee.roles || []
+    console.log('Current user roles:', userRoles)
+    console.log('Employee/User object keys:', Object.keys(currentEmployee))
+    console.log('Is employee?', currentEmployee.isEmployee)
+
+    if (userRoles.includes('admin') || userRoles.includes('manager')) {
+      console.log('User is admin/manager - can edit/delete any package')
+      return true
+    }
+
+    // For non-admin users (both employees and regular users), only allow edit/delete for "on hold" packages
+    const packageStatus = package_.status?.toLowerCase()
+    console.log('Package status (lowercase):', packageStatus)
+    const canEdit = packageStatus === 'on hold'
+    console.log('Non-admin user can edit/delete based on status:', canEdit)
+    console.log('=== END EDIT/DELETE CHECK ===')
+    return canEdit
+  }, [currentEmployee, package_.status, loading])
 
   // Check if user can register packages (ParcelManager position or admin/manager roles)
   const canRegister = React.useMemo(() => {
@@ -127,15 +208,56 @@ export function ShipmentTableActions({ package_ }: { package_: Package }) {
     return package_.status?.toLowerCase() === 'on hold'
   }, [package_.status])
 
+  // Check if user is a courier
+  const isCourier = React.useMemo(() => {
+    if (!currentEmployee) return false
+    const positionType = currentEmployee.position?.toLowerCase()
+    return positionType === 'courier'
+  }, [currentEmployee])
+
+  // Check if package can be marked as delivered (status is "in delivering" and user is courier)
+  const packageCanBeDelivered = React.useMemo(() => {
+    return package_.status?.toLowerCase() === 'in delivering' && isCourier
+  }, [package_.status, isCourier])
+
   // Fetch current employee info on component mount
   React.useEffect(() => {
     console.log('Fetching current employee...')
     async function fetchCurrentEmployee() {
       try {
         setLoading(true)
-        const employee = await GetCurrentEmployee()
+
+        // Get both current user and employee data
+        const [employee, user] = await Promise.all([
+          GetCurrentEmployee(),
+          import('@/lib/auth_actions').then(module => module.GetCurrentUser()),
+        ])
+
         console.log('Current employee fetched:', employee)
-        setCurrentEmployee(employee)
+        console.log('Current user fetched:', user)
+
+        // If user exists but no employee record, treat user as a regular user
+        if (user && !employee) {
+          console.log('User exists but no employee record - treating as regular user')
+          setCurrentEmployee({
+            id: user.id,
+            roles: user.roles || [],
+            position: null, // No position for non-employees
+            isEmployee: false,
+          })
+        } else if (employee) {
+          // Combine employee data with user roles
+          const employeeWithRoles = {
+            ...employee,
+            roles: user?.roles || [], // Add user roles to employee object
+            isEmployee: true,
+          }
+          console.log('Employee with roles:', employeeWithRoles)
+          setCurrentEmployee(employeeWithRoles)
+        } else {
+          console.log('No user or employee found')
+          setCurrentEmployee(null)
+        }
       } catch (error) {
         console.error('Failed to fetch current employee:', error)
       } finally {
@@ -148,17 +270,29 @@ export function ShipmentTableActions({ package_ }: { package_: Package }) {
 
   console.log('canRegister:', canRegister)
   console.log('packageCanBeRegistered:', packageCanBeRegistered)
+  console.log('canEditOrDelete:', canEditOrDelete)
+  console.log('packageCanBeDelivered:', packageCanBeDelivered)
   console.log('Current employee:', currentEmployee)
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      status: package_.status ?? '',
-      toAdress: package_.toAdress ?? false,
-      address: package_.deliveryAddress ?? '',
-    },
-  })
-  const formButtonRef = React.useRef<HTMLButtonElement>(null)
-  const formRef = React.useRef<HTMLFormElement>(null)
+  console.log('Package status:', package_.status)
+  console.log('Loading employee:', loading)
+
+  // If still loading, show a loading state
+  if (loading) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <DotsHorizontalIcon className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Loading...</DropdownMenuLabel>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+  }
+
   return (
     <>
       <DropdownMenu>
@@ -178,7 +312,11 @@ export function ShipmentTableActions({ package_ }: { package_: Package }) {
             Copy shipment ID
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => setEditDialog(true)}>Edit</DropdownMenuItem>
+
+          {canEditOrDelete && (
+            <DropdownMenuItem onSelect={() => setEditDialog(true)}>Edit</DropdownMenuItem>
+          )}
+
           {canRegister && packageCanBeRegistered && (
             <DropdownMenuItem
               onSelect={() => setShowRegisterDialog(true)}
@@ -187,9 +325,19 @@ export function ShipmentTableActions({ package_ }: { package_: Package }) {
               Register Package
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onSelect={() => setShowDeleteDialog(true)} className="text-red-600">
-            Delete
-          </DropdownMenuItem>
+          {packageCanBeDelivered && (
+            <DropdownMenuItem
+              onSelect={() => setShowDeliveredDialog(true)}
+              className="text-blue-600"
+            >
+              Mark as Delivered
+            </DropdownMenuItem>
+          )}
+          {canEditOrDelete && (
+            <DropdownMenuItem onSelect={() => setShowDeleteDialog(true)} className="text-red-600">
+              Delete
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       <AlertDialog open={showEditDialog} onOpenChange={setEditDialog}>
@@ -230,30 +378,33 @@ export function ShipmentTableActions({ package_ }: { package_: Package }) {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a valid status to add" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {statuses?.map(status => (
-                            <SelectItem key={status.id} value={status.status!}>
-                              {status.status!}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Only show status field for employees (not regular users) */}
+                {currentEmployee?.isEmployee && (
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a valid status to add" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {statuses?.map(status => (
+                              <SelectItem key={status.id} value={status.status!}>
+                                {status.status!}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 <Button
                   className="hidden"
                   variant={'ghost'}
@@ -319,6 +470,28 @@ export function ShipmentTableActions({ package_ }: { package_: Package }) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <Button variant="default" onClick={handleRegister}>
               Register Package
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={showDeliveredDialog} onOpenChange={setShowDeliveredDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark Package as Delivered</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to mark this package as delivered? This action confirms that the
+              package has been successfully delivered to the recipient.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isMarkingDelivered}>Cancel</AlertDialogCancel>
+            <Button
+              variant="default"
+              onClick={handleMarkAsDelivered}
+              disabled={isMarkingDelivered}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isMarkingDelivered ? 'Marking as Delivered...' : 'Mark as Delivered'}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

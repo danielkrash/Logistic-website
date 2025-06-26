@@ -114,7 +114,7 @@ export function CreateOffice({ data }: { data: Companies }) {
                   name="company"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Roles</FormLabel>
+                      <FormLabel>Company</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>

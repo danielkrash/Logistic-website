@@ -338,3 +338,36 @@ export async function GetCurrentEmployee() {
     return null
   }
 }
+
+export async function GetCurrentUserEmployee() {
+  var cookie = await getAuthCookie()
+  const currentUser = await GetCurrentUser()
+
+  if (!currentUser?.id) {
+    return null
+  }
+
+  try {
+    const response = await fetch('http://localhost:7028/employee', {
+      cache: 'no-store',
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: `.AspNetCore.Identity.Application=${cookie?.value}`,
+      },
+    })
+
+    if (!response.ok) {
+      return null
+    }
+
+    let employees: Employee[] = await response.json()
+    // Find employee record that matches current user ID
+    const currentEmployee = employees.find(emp => emp.id === currentUser.id)
+    return currentEmployee || null
+  } catch (error) {
+    console.error('There was a problem with the fetch operation:', error)
+    return null
+  }
+}

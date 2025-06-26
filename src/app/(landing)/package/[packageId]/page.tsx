@@ -14,6 +14,7 @@ import {
   Box,
 } from 'lucide-react'
 import { GetPackageByTracker } from '@/lib/package_actions'
+import { formatDeliveryDate, formatDateWithTime } from '@/lib/date-utils'
 
 export default async function Page({ params }: { params: Promise<{ packageId: string }> }) {
   const { packageId } = await params
@@ -86,11 +87,11 @@ export default async function Page({ params }: { params: Promise<{ packageId: st
                       <div className="space-y-3">
                         <div className="flex items-center">
                           <Calendar className="mr-2 h-5 w-5 text-blue-500" />
-                          <span>Shipped: {pack.shippingDate!}</span>
+                          <span>Shipped: {formatDateWithTime(pack.shippingDate)}</span>
                         </div>
                         <div className="flex items-center">
                           <Calendar className="mr-2 h-5 w-5 text-green-500" />
-                          <span>Estimated Delivery: {pack.deliveryDate!}</span>
+                          <span>Estimated Delivery: {formatDeliveryDate(pack.deliveryDate)}</span>
                         </div>
                         <div className="flex items-center">
                           <MapPin className="mr-2 h-5 w-5 text-red-500" />

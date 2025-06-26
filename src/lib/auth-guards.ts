@@ -34,3 +34,33 @@ export async function requireAdmin(): Promise<User> {
 
   return user
 }
+
+export async function requireCourier(): Promise<User> {
+  const user = await requireAuth()
+
+  // Check if user is an employee (has employee role)
+  if (!user.roles?.includes('employee')) {
+    redirect('/dashboard')
+  }
+
+  // Get employee information to check position
+  const { GetCurrentUserEmployee } = await import('./employee_actions')
+  const employee = await GetCurrentUserEmployee()
+
+  if (!employee || employee.position?.toLowerCase() !== 'courier') {
+    redirect('/dashboard')
+  }
+
+  return user
+}
+
+export async function requireAdminOrManager(): Promise<User> {
+  const user = await requireAuth()
+  console.log('User roles:', user.roles)
+  // If user is not admin or manager, redirect to dashboard home
+  if (!user.roles?.includes('admin') && !user.roles?.includes('manager')) {
+    redirect('/dashboard')
+  }
+  console.log('User is admin or manager:', user)
+  return user
+}

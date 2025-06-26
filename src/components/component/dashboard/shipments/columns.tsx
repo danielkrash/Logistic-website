@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { CaretSortIcon } from '@radix-ui/react-icons'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
+import { getStatusBadgeProps } from '@/lib/user-utils'
+import { formatDateWithTime, formatDateShort } from '@/lib/date-utils'
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -67,37 +69,7 @@ export const shipmentColumns: ColumnDef<Package>[] = [
     header: 'Status',
     cell: ({ row }) => {
       const status = row.getValue('status') as string
-      const statusLower = status?.toLowerCase()
-
-      // Define badge variants and colors for different statuses
-      let badgeVariant: 'default' | 'secondary' | 'destructive' | 'outline' = 'default'
-      let badgeClasses = ''
-
-      switch (statusLower) {
-        case 'on hold':
-          badgeVariant = 'outline'
-          badgeClasses = 'border-orange-500 text-orange-700 bg-orange-50'
-          break
-        case 'delivered':
-          badgeVariant = 'default'
-          badgeClasses = 'bg-green-600 text-white'
-          break
-        case 'in delivering':
-          badgeVariant = 'default'
-          badgeClasses = 'bg-blue-600 text-white'
-          break
-        case 'canceled':
-          badgeVariant = 'destructive'
-          badgeClasses = 'bg-red-600 text-white'
-          break
-        case 'wait courier':
-          badgeVariant = 'secondary'
-          badgeClasses = 'bg-yellow-100 text-yellow-800 border-yellow-300'
-          break
-        default:
-          badgeVariant = 'outline'
-          badgeClasses = 'border-gray-300 text-gray-700'
-      }
+      const { badgeVariant, badgeClasses } = getStatusBadgeProps(status)
 
       return (
         <Badge variant={badgeVariant} className={badgeClasses}>
@@ -193,12 +165,16 @@ export const shipmentColumns: ColumnDef<Package>[] = [
   {
     accessorKey: 'deliveryDate',
     header: 'Delivery Date',
-    cell: ({ row }) => <div className="capitalize">{row.getValue('deliveryDate')}</div>,
+    cell: ({ row }) => (
+      <div className="whitespace-nowrap">{formatDateWithTime(row.getValue('deliveryDate'))}</div>
+    ),
   },
   {
     accessorKey: 'shippingDate',
     header: 'Shipping Date',
-    cell: ({ row }) => <div className="capitalize">{row.getValue('shippingDate')}</div>,
+    cell: ({ row }) => (
+      <div className="whitespace-nowrap">{formatDateShort(row.getValue('shippingDate'))}</div>
+    ),
   },
   {
     accessorKey: 'packageInfo.fragile',

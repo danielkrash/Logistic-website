@@ -134,3 +134,48 @@ export const company_fetcher = async (url: string) => {
   var result: Companies = await response.json()
   return result
 }
+
+export async function getAllCompaniesRevenue() {
+  var cookie = await getAuthCookie()
+  try {
+    // First try to get all companies revenue from a single endpoint
+    const response = await fetch('http://localhost:7028/company/revenue/all', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: `.AspNetCore.Identity.Application=${cookie?.value}`,
+      },
+    })
+
+    if (response.ok) {
+      let result: CompanyRevenue[] = await response.json()
+      return result
+    }
+
+    // If the endpoint doesn't exist, fallback to getting all companies and their individual revenues
+    const companies = await GetCompanies()
+    if (!companies) return []
+
+    const allRevenues: CompanyRevenue[] = []
+
+    // Get revenue for each company
+    for (const company of companies) {
+      if (company.id) {
+        try {
+          const companyRevenue = await getCompanyRevenue(company.id)
+          if (companyRevenue) {
+            allRevenues.push(...companyRevenue)
+          }
+        } catch (error) {
+          console.error(`Failed to get revenue for company ${company.id}:`, error)
+        }
+      }
+    }
+
+    return allRevenues
+  } catch (error) {
+    console.error('There was a problem with the fetch operation:', error)
+    return []
+  }
+}
