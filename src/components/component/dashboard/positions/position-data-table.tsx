@@ -1,7 +1,6 @@
 'use client'
-
 import * as React from 'react'
-import { CaretSortIcon, ChevronDownIcon, DotsHorizontalIcon } from '@radix-ui/react-icons'
+import { ChevronDownIcon } from '@radix-ui/react-icons'
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -13,7 +12,6 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-  type Row,
 } from '@tanstack/react-table'
 
 import { Button } from '@/components/ui/button'
@@ -22,9 +20,6 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
@@ -36,25 +31,25 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { deleteRows } from '@/lib/delete-rows'
-import { CreateOffice } from './create-office'
-import type { Companies } from '@/types/dashboard'
+import { CreatePosition } from './create-position'
+import type { components } from '@/types/schemav3'
 
-interface DataTableProps<TData, TValue, Companies> {
+type PositionDto = components['schemas']['PositionDto']
+
+interface PositionDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
-  data: TData[] extends Array<infer U> ? U[] : TData[]
-  company: Companies
+  data: TData[]
 }
 
-export function OfficeTable<TData, TValue>({
+export function PositionDataTable<TData, TValue>({
   columns,
   data,
-  company,
-}: DataTableProps<TData, TValue, Companies>) {
+}: PositionDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+
   const table = useReactTable({
     data,
     columns,
@@ -74,49 +69,42 @@ export function OfficeTable<TData, TValue>({
     },
   })
 
-  const deletableData = table
-    .getSelectedRowModel()
-    .flatRows.map(row => row.original)
-    .map(row => (row as { id: string }).id)
-
   return (
     <div className="w-full">
-      <div className="flex items-end py-4">
-        <div className="flex-1">
-          <Input
-            placeholder="Filter company name..."
-            value={(table.getColumn('companyName')?.getFilterValue() as string) ?? ''}
-            onChange={event => table.getColumn('companyName')?.setFilterValue(event.target.value)}
-            className="max-w-sm"
-          />
+      <div className="flex items-center py-4">
+        <Input
+          placeholder="Filter positions..."
+          value={(table.getColumn('type')?.getFilterValue() as string) ?? ''}
+          onChange={event => table.getColumn('type')?.setFilterValue(event.target.value)}
+          className="max-w-sm"
+        />
+        <div className="ml-auto flex space-x-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter(column => column.getCanHide())
+                .map(column => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={value => column.toggleVisibility(!!value)}
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  )
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <CreatePosition />
         </div>
-        <div className="mx-5">
-          <CreateOffice data={company} />
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter(column => column.getCanHide())
-              .map(column => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={value => column.toggleVisibility(!!value)}
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                )
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
       <div className="rounded-md border">
         <Table>
@@ -156,18 +144,10 @@ export function OfficeTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{' '}
           {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="flex justify-start text-sm text-muted-foreground">
-          {table.getIsSomeRowsSelected() && (
-            <Button variant="outline" size={'sm'} onClick={async () => deleteRows(deletableData)}>
-              Delete selected
-            </Button>
-          )}
         </div>
         <div className="space-x-2">
           <Button

@@ -1,4 +1,4 @@
-import '@/styles/globals.css'
+import '../../styles/globals.css'
 import { Footer } from '@/components/component/footer'
 import { ThemeProvider } from '@/components/component/theme-provider'
 import { inter } from '@/components/font'
@@ -7,13 +7,14 @@ import { Toaster } from '@/components/ui/sonner'
 
 export default function LoginLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={` ${inter.className}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
+          storageKey="cargo-theme"
         >
           <div className="flex min-h-screen flex-col">
             <div className="bg-alternative flex flex-1 flex-col">

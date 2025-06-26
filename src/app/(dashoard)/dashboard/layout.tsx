@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import '@/styles/globals.css'
+import '../../../styles/globals.css'
 import { Footer } from '@/components/component/footer'
 import { ThemeProvider } from '@/components/component/theme-provider'
 import { MainDashboardNav } from '@/components/component/dashboard/dashboard-nav'
@@ -15,13 +15,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`flex min-h-screen flex-col  ${inter.className}`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`flex min-h-screen flex-col ${inter.className}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
+          storageKey="cargo-theme"
         >
           <MainDashboardNav>{children}</MainDashboardNav>
           <Footer />

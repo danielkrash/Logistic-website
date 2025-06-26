@@ -28,6 +28,9 @@ const nextConfig = withBundleAnalyzerConfig({
       fullUrl:true
     }
   },
+    turbopack: {
+    // ...
+  },
   experimental:{
     typedRoutes:true,
     optimizePackageImports:['@radix-ui/react-dropdown-menu','@radix-ui/react-icons','@radix-ui/react-label','@radix-ui/react-slot','@hookform/resolvers','react-hook-form','@tremor/react'],

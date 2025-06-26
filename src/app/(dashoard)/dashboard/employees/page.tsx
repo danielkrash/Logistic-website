@@ -3,8 +3,12 @@ import { SearchBar } from '@/components/component/search'
 import { Suspense } from 'react'
 import { CustomerPage } from '@/components/component/dashboard/customers/page-data'
 import { EmployeePage } from '@/components/component/dashboard/employee/employee-page'
+import { requireAdminOrManager } from '@/lib/auth-guards'
 
-export default function Employee() {
+export default async function Employee() {
+  // Protect this page - only admin and manager users can access
+  await requireAdminOrManager()
+
   return (
     //   <div className="w-full">
     //   <div className="flex w-full items-center justify-between">

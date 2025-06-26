@@ -1,4 +1,4 @@
-import type { components, paths } from '@/types/schemav2'
+import type { components, paths } from '@/types/schemav3'
 
 export type Users = paths['/users']['get']['responses']['200']['content']['application/json']
 export type User = paths['/users/{id}']['get']['responses']['200']['content']['application/json']
@@ -24,6 +24,7 @@ export type PackageStatuses =
 export type CompanyRevenue = components['schemas']['CompanyRevenue']
 export type TrackedPackage =
   paths['/package/track/{id}']['get']['responses']['200']['content']['application/json']
+export type PackageStatus = components['schemas']['PackageStatus']
 
 export type Customers = {
   id: string

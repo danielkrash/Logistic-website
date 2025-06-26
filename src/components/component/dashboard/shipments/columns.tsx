@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { CaretSortIcon } from '@radix-ui/react-icons'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
+import { getStatusBadgeProps } from '@/lib/user-utils'
+import { formatDateWithTime, formatDateShort } from '@/lib/date-utils'
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -65,7 +67,16 @@ export const shipmentColumns: ColumnDef<Package>[] = [
   {
     accessorKey: 'status',
     header: 'Status',
-    cell: ({ row }) => <Badge>{row.getValue('status')}</Badge>,
+    cell: ({ row }) => {
+      const status = row.getValue('status') as string
+      const { badgeVariant, badgeClasses } = getStatusBadgeProps(status)
+
+      return (
+        <Badge variant={badgeVariant} className={badgeClasses}>
+          {status}
+        </Badge>
+      )
+    },
   },
   {
     accessorKey: 'senderEmail',
@@ -154,12 +165,16 @@ export const shipmentColumns: ColumnDef<Package>[] = [
   {
     accessorKey: 'deliveryDate',
     header: 'Delivery Date',
-    cell: ({ row }) => <div className="capitalize">{row.getValue('deliveryDate')}</div>,
+    cell: ({ row }) => (
+      <div className="whitespace-nowrap">{formatDateWithTime(row.getValue('deliveryDate'))}</div>
+    ),
   },
   {
     accessorKey: 'shippingDate',
     header: 'Shipping Date',
-    cell: ({ row }) => <div className="capitalize">{row.getValue('shippingDate')}</div>,
+    cell: ({ row }) => (
+      <div className="whitespace-nowrap">{formatDateShort(row.getValue('shippingDate'))}</div>
+    ),
   },
   {
     accessorKey: 'packageInfo.fragile',

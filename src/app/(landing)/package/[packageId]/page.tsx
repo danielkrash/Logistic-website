@@ -14,15 +14,17 @@ import {
   Box,
 } from 'lucide-react'
 import { GetPackageByTracker } from '@/lib/package_actions'
+import { formatDeliveryDate, formatDateWithTime } from '@/lib/date-utils'
 
-export default async function Page({ params }: { params: { packageId: string } }) {
-  var pack = await GetPackageByTracker(params.packageId)
+export default async function Page({ params }: { params: Promise<{ packageId: string }> }) {
+  const { packageId } = await params
+  var pack = await GetPackageByTracker(packageId)
   if (pack == undefined || pack == null) {
     return (
-      <main key="1" className=" grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+      <main key="1" className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
         <div className="dark:to-dark hidden bg-gradient-to-b from-gray-100/40 to-white dark:bg-gradient-to-b dark:from-gray-800/40 lg:block">
           <div className="flex h-full max-h-screen flex-col gap-2">
-            <div className="flex h-[60px] items-center  px-6">
+            <div className="flex h-[60px] items-center px-6">
               <span className="sr-only">Toggle notifications</span>
             </div>
           </div>
@@ -45,7 +47,7 @@ export default async function Page({ params }: { params: { packageId: string } }
       return 'bg-gray-500'
     }
     return (
-      <main className=" grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+      <main className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
         <div className="dark:to-dark hidden bg-gradient-to-b from-gray-100/40 to-white dark:bg-gradient-to-b dark:from-gray-800/40 lg:block">
           <div className="flex h-full max-h-screen flex-col gap-2">
             <div className="flex h-[60px] items-center px-6"></div>
@@ -85,11 +87,11 @@ export default async function Page({ params }: { params: { packageId: string } }
                       <div className="space-y-3">
                         <div className="flex items-center">
                           <Calendar className="mr-2 h-5 w-5 text-blue-500" />
-                          <span>Shipped: {pack.shippingDate!}</span>
+                          <span>Shipped: {formatDateWithTime(pack.shippingDate)}</span>
                         </div>
                         <div className="flex items-center">
                           <Calendar className="mr-2 h-5 w-5 text-green-500" />
-                          <span>Estimated Delivery: {pack.deliveryDate!}</span>
+                          <span>Estimated Delivery: {formatDeliveryDate(pack.deliveryDate)}</span>
                         </div>
                         <div className="flex items-center">
                           <MapPin className="mr-2 h-5 w-5 text-red-500" />
@@ -145,7 +147,7 @@ export default async function Page({ params }: { params: { packageId: string } }
                       <h3 className="mb-3 text-lg font-semibold">Shipping Company</h3>
                       <div className="flex items-center">
                         <Building className="mr-2 h-5 w-5 text-purple-500" />
-                        <span>{pack.companyName}</span>
+                        <span>{pack.companyName || 'Unknown Company'}</span>
                       </div>
                     </div>
                   </div>

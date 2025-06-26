@@ -13,7 +13,7 @@ import {
   PackagePlus,
 } from 'lucide-react'
 import exp from 'constants'
-import type { paths, components } from '@/types/schemav2'
+import type { paths, components } from '@/types/schemav3'
 import { GetUserSecrets } from '@/lib/user_actions'
 import { GetCurrentUser } from '@/lib/auth_actions'
 

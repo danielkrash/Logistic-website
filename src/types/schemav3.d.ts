@@ -485,6 +485,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/company/{id}/rate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['GetCompanyRate']
+    put: operations['UpdateCompanyRate']
+    post: operations['CreateCompanyRate']
+    delete: operations['DeleteCompanyRate']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/employee': {
     parameters: {
       query?: never
@@ -512,6 +528,22 @@ export interface paths {
     put: operations['ChangeEmployeeById']
     post?: never
     delete: operations['DeleteEmployeeById']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/employee/assign-position': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['AssignPositionToEmployee']
+    post?: never
+    delete?: never
     options?: never
     head?: never
     patch?: never
@@ -661,6 +693,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/package/{id}/register': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['RegisterPackageById']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/package/{id}/assign-courier': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['AssigneToCourierById']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/position': {
     parameters: {
       query?: never
@@ -670,8 +734,24 @@ export interface paths {
     }
     get: operations['GetPositions']
     put?: never
-    post?: never
+    post: operations['CreatePosition']
     delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/position/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['GetPositionById']
+    put: operations['UpdatePosition']
+    post?: never
+    delete: operations['DeletePosition']
     options?: never
     head?: never
     patch?: never
@@ -685,6 +765,38 @@ export interface paths {
       cookie?: never
     }
     get: operations['GetRoles']
+    put?: never
+    post: operations['CreateRole']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/role/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['GetRoleById']
+    put?: never
+    post?: never
+    delete: operations['DeleteRole']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/role/name/{name}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['GetRoleByName']
     put?: never
     post?: never
     delete?: never
@@ -822,6 +934,20 @@ export interface components {
       creationDate?: string | null
       address?: string | null
     }
+    AddCompanyRateDto: {
+      /** Format: int32 */
+      companyId?: number
+      /** Format: double */
+      packageRatePerGram?: number
+      /** Format: double */
+      officeDeliveryRate?: number
+      /** Format: double */
+      homeDeliveryRate?: number
+      /** Format: double */
+      hazardousRate?: number
+      /** Format: double */
+      fragileRate?: number
+    }
     AddEmployeeDto: {
       id: string | null
       /** Format: double */
@@ -898,6 +1024,16 @@ export interface components {
       user?: components['schemas']['ApplicationUser']
       role?: components['schemas']['UserRole']
     }
+    AssignCourierDto: {
+      courierId: string | null
+      /** Format: date-time */
+      deliveryDate: string
+    }
+    AssignPositionDto: {
+      employeeId: string | null
+      /** Format: int32 */
+      positionId: number
+    }
     ChangeCompanyDto: {
       /** Format: int32 */
       id?: number
@@ -905,6 +1041,18 @@ export interface components {
       /** Format: date */
       creationDate?: string
       address?: string | null
+    }
+    ChangeCompanyRateDto: {
+      /** Format: double */
+      packageRatePerGram?: number | null
+      /** Format: double */
+      officeDeliveryRate?: number | null
+      /** Format: double */
+      homeDeliveryRate?: number | null
+      /** Format: double */
+      hazardousRate?: number | null
+      /** Format: double */
+      fragileRate?: number | null
     }
     ChangeEmployeeDto: {
       id?: string | null
@@ -947,6 +1095,7 @@ export interface components {
       address?: string | null
       offices?: components['schemas']['Office'][] | null
       companyRevenues?: components['schemas']['CompanyRevenue'][] | null
+      packages?: components['schemas']['Package'][] | null
       companyRate?: components['schemas']['CompanyRate']
     }
     CompanyGetDto: {
@@ -971,6 +1120,21 @@ export interface components {
       /** Format: double */
       fragileRate?: number
       company?: components['schemas']['Company']
+    }
+    CompanyRateGetDto: {
+      /** Format: int32 */
+      companyId?: number
+      /** Format: double */
+      packageRatePerGram?: number
+      /** Format: double */
+      officeDeliveryRate?: number
+      /** Format: double */
+      homeDeliveryRate?: number
+      /** Format: double */
+      hazardousRate?: number
+      /** Format: double */
+      fragileRate?: number
+      companyName?: string | null
     }
     CompanyRevenue: {
       /** Format: int32 */
@@ -1082,8 +1246,9 @@ export interface components {
       detail?: string | null
       instance?: string | null
       errors?: {
-        [key: string]: string[] | undefined
+        [key: string]: string[]
       } | null
+    } & {
       [key: string]: unknown
     }
     InfoRequest: {
@@ -1132,7 +1297,9 @@ export interface components {
       courierId?: string | null
       /** Format: double */
       price?: number
-      companyName?: string | null
+      /** Format: int32 */
+      companyId?: number
+      company?: components['schemas']['Company']
       registrarEmployee?: components['schemas']['Employee']
       packageInfo?: components['schemas']['PackageInfo']
       deliveryAddress?: string | null
@@ -1176,6 +1343,12 @@ export interface components {
       positionType?: string | null
       positionInfo?: string | null
     }
+    PositionDto: {
+      /** Format: int32 */
+      id?: number
+      type: string | null
+      description: string | null
+    }
     RefreshRequest: {
       refreshToken: string | null
     }
@@ -1194,6 +1367,11 @@ export interface components {
       email: string | null
       resetCode: string | null
       newPassword: string | null
+    }
+    RoleDto: {
+      /** Format: uuid */
+      id?: string
+      name: string | null
     }
     TwoFactorRequest: {
       enable?: boolean | null
@@ -1386,6 +1564,13 @@ export interface operations {
           'application/json': components['schemas']['CompanyGetDto']
         }
       }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
     }
   }
   ChangeCompaniesById: {
@@ -1405,6 +1590,13 @@ export interface operations {
     responses: {
       /** @description OK */
       200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
         headers: {
           [name: string]: unknown
         }
@@ -1451,6 +1643,13 @@ export interface operations {
     responses: {
       /** @description No Content */
       204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
         headers: {
           [name: string]: unknown
         }
@@ -1524,6 +1723,119 @@ export interface operations {
       }
     }
   }
+  GetCompanyRate: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CompanyRateGetDto']
+        }
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UpdateCompanyRate: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChangeCompanyRateDto']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  CreateCompanyRate: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AddCompanyRateDto']
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AddCompanyRateDto']
+        }
+      }
+    }
+  }
+  DeleteCompanyRate: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
   GetEmployees: {
     parameters: {
       query?: never
@@ -1562,9 +1874,7 @@ export interface operations {
         headers: {
           [name: string]: unknown
         }
-        content: {
-          'application/json': components['schemas']['ChangeEmployeeDto'][]
-        }
+        content?: never
       }
     }
   }
@@ -1628,6 +1938,13 @@ export interface operations {
           'application/json': components['schemas']['EmployeeDto']
         }
       }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
     }
   }
   ChangeEmployeeById: {
@@ -1652,6 +1969,13 @@ export interface operations {
         }
         content?: never
       }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
     }
   }
   DeleteEmployeeById: {
@@ -1667,6 +1991,35 @@ export interface operations {
     responses: {
       /** @description No Content */
       204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  AssignPositionToEmployee: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AssignPositionDto']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
         headers: {
           [name: string]: unknown
         }
@@ -1800,6 +2153,13 @@ export interface operations {
           'application/json': components['schemas']['GetOfficesDto']
         }
       }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
     }
   }
   ChangeOfficesById: {
@@ -1819,6 +2179,13 @@ export interface operations {
     responses: {
       /** @description OK */
       200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
         headers: {
           [name: string]: unknown
         }
@@ -1844,11 +2211,20 @@ export interface operations {
         }
         content?: never
       }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
     }
   }
   GetPackages: {
     parameters: {
-      query?: never
+      query?: {
+        registered?: string
+      }
       header?: never
       path?: never
       cookie?: never
@@ -1950,6 +2326,13 @@ export interface operations {
           'application/json': components['schemas']['GetPackagesDto']
         }
       }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
     }
   }
   ChangePackagesById: {
@@ -1974,6 +2357,13 @@ export interface operations {
         }
         content?: never
       }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
     }
   }
   DeletePackagesById: {
@@ -1989,6 +2379,13 @@ export interface operations {
     responses: {
       /** @description No Content */
       204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
         headers: {
           [name: string]: unknown
         }
@@ -2016,6 +2413,13 @@ export interface operations {
           'application/json': components['schemas']['GetPackagesDto']
         }
       }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
     }
   }
   ChangeTrackPackagesById: {
@@ -2040,6 +2444,13 @@ export interface operations {
         }
         content?: never
       }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
     }
   }
   DeleteTrackPackagesById: {
@@ -2055,6 +2466,13 @@ export interface operations {
     responses: {
       /** @description No Content */
       204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
         headers: {
           [name: string]: unknown
         }
@@ -2130,6 +2548,57 @@ export interface operations {
       }
     }
   }
+  RegisterPackageById: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  AssigneToCourierById: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AssignCourierDto']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
   GetPositions: {
     parameters: {
       query?: never
@@ -2145,8 +2614,112 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['Position'][]
+          'application/json': components['schemas']['PositionDto'][]
         }
+      }
+    }
+  }
+  CreatePosition: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PositionDto']
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PositionDto']
+        }
+      }
+    }
+  }
+  GetPositionById: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PositionDto']
+        }
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UpdatePosition: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PositionDto']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  DeletePosition: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
       /** @description Not Found */
       404: {
@@ -2172,7 +2745,109 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['UserRole'][]
+          'application/json': components['schemas']['RoleDto'][]
+        }
+      }
+    }
+  }
+  CreateRole: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': string
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': string
+        }
+      }
+    }
+  }
+  GetRoleById: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RoleDto']
+        }
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  DeleteRole: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No Content */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  GetRoleByName: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        name: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RoleDto']
         }
       }
       /** @description Not Found */

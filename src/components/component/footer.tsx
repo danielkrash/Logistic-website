@@ -74,33 +74,33 @@ export function Footer() {
           </Link>
           <ul className="mb-6 flex flex-wrap items-center text-sm font-medium text-gray-500 sm:mb-0">
             <li>
-              <a href="#" className="me-4 hover:underline md:me-6">
+              <Link href={'/about' as any} className="me-4 hover:underline md:me-6">
                 About
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="me-4 hover:underline md:me-6">
+              <Link href={'/privacy' as any} className="me-4 hover:underline md:me-6">
                 Privacy Policy
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="me-4 hover:underline md:me-6">
+              <Link href={'/license' as any} className="me-4 hover:underline md:me-6">
                 Licensing
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:underline">
+              <Link href={'/contact' as any} className="hover:underline">
                 Contact
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
         <div className="mx-auto flex w-full max-w-screen-xl items-center justify-between p-4 md:py-4">
           <span className="block text-sm text-gray-500 sm:text-center">
             © 2023{' '}
-            <a href="/" className="hover:underline">
+            <Link href="/" className="hover:underline">
               Parcel™
-            </a>
+            </Link>
             . All Rights Reserved.
           </span>
           <Suspense fallback={<div>Loading...</div>}>

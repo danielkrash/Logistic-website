@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { GetCurrentUser, signOut } from '@/lib/auth_actions'
-import type { paths, components } from '@/types/schemav2'
+import type { paths, components } from '@/types/schemav3'
 import { usePathname } from 'next/navigation'
 
 type User = components['schemas']['UserDto'] | null | undefined

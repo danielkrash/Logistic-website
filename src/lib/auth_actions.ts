@@ -2,7 +2,7 @@
 import 'server-only'
 import { cookies } from 'next/headers'
 import { permanentRedirect, redirect } from 'next/navigation'
-import type { paths, components } from '@/types/schemav2'
+import type { paths, components } from '@/types/schemav3'
 
 type User = components['schemas']['UserDto']
 type signUpError =
@@ -45,13 +45,15 @@ export async function signIn(data: FormData) {
   const regex = /\.AspNetCore\.Identity\.Application=([^;]*)/
   const match = cookie_val.match(regex)
   if (match && match[1]) {
-    cookies().set('.AspNetCore.Identity.Application', match[1], { httpOnly: true, secure: true })
+    const cookieStore = await cookies()
+    cookieStore.set('.AspNetCore.Identity.Application', match[1], { httpOnly: true, secure: true })
   }
   redirect('http://localhost:3000/')
 }
 
 export async function GetCurrentUser() {
-  var cookie = cookies().get('.AspNetCore.Identity.Application')
+  const cookieStore = await cookies()
+  var cookie = cookieStore.get('.AspNetCore.Identity.Application')
   if (cookie == undefined) {
     return null
   }
@@ -104,6 +106,7 @@ export async function signUp(data: FormData) {
 }
 
 export async function signOut() {
-  cookies().delete('.AspNetCore.Identity.Application')
+  const cookieStore = await cookies()
+  cookieStore.delete('.AspNetCore.Identity.Application')
   redirect('http://localhost:3000/')
 }
